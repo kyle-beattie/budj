@@ -11,7 +11,11 @@ import SwiftUI
 struct BudjApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+            .onOpenURL { url in
+              // Your deep-link handling logic lives here
+              print("App opened via URL: \(url)")
+            }
         }
     }
 }

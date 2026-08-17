@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a747c782-9850-4c92-83ce-68d5f4209410" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Budj.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/Budj.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Budj/BudjApp.swift" beforeDir="false" afterPath="$PROJECT_DIR$/Budj/BudjApp.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Budj/ContentView.swift" beforeDir="false" afterPath="$PROJECT_DIR$/Budj/ContentView.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Budj/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/Budj/Info.plist" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,9 +23,6 @@
       <entry key="_/Users/kylebeattie/Sites/bucks" value="3EpgaIJcNmyzEZnhDNTNokulCpd" />
       <entry key="_/Users/kylebeattie/Sites/budj" value="3EpoQSxg5HfsfTxL7tP40hx3j1K" />
     </persistenceIdMap>
-  </component>
-  <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="19994" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">

@@ -8,33 +8,30 @@ Budj is a New Zealand personal-finance app: it connects to your bank via open ba
 
 It is a SwiftUI iOS/iPadOS app (bundle id `nz.app.Budj`, `TARGETED_DEVICE_FAMILY = "1,2"`). The Xcode project currently holds a fresh scaffold — `BudjApp.swift` + a placeholder `ContentView.swift` — so all of the above is designed but not yet built. There is no Swift Package Manager manifest and no third-party dependencies; the Xcode project (`Budj.xcodeproj`, objectVersion 77) is the source of truth for the build.
 
-## Design prototype
+## Specs
 
-A click-through prototype and design system live **outside this repo**, at `~/Documents/budj/Budj iOS App Design/` (not version-controlled with the app — treat it as read-only reference and re-check it rather than assuming it is unchanged):
+Product behaviour is specified in the **`budj-specs` OpenSpec store**, a standalone repo at `/Users/kylebeattie/Sites/budj-specs` shared between this app and `budj-server`. Read it before designing anything; it is the source of truth for the domain model, the flows, and the API contract.
 
-- `Budj.dc.html` — the interactive iOS prototype. Its behaviour lives in a `<script type="text/x-dc">` block near the end of the file; extract that block to read the screen flow and domain model as plain JS.
-- `_ds/budj-design-system-*/tokens/` — `colors.css`, `typography.css`, `spacing.css`, `effects.css`. These are the authoritative visual values.
-- `_ds/budj-design-system-*/readme.md` — voice, visual foundations, and motion rules. Read this before making any design judgement call.
-- `assets/lettermark.svg`, `assets/wordmark.svg` — placeholder brand marks created for the kit, not real brand assets.
+```bash
+openspec list --store budj-specs
+openspec show <change> --store budj-specs
+```
 
-### Domain model implied by the prototype
+The iOS app's own change is `add-ios-onboarding` — launch, sign-in, subscription, bank connection, and the component architecture everything else is built on. `add-onboarding`, `add-rule-triggers`, `add-rule-allocation` and `add-account-deletion` specify the server the app talks to.
 
-- **Account** — id, bank (ANZ / ASB / BNZ / Westpac / Kiwibank), name, balance.
-- **Rule** — name, source account, trigger, formula, destination account, active flag. Triggers are one of `received` (money arrives), `threshold` (balance crosses an amount, above/below), or `recurring` (a recurring pattern such as "Salary" is detected).
-- **Formula** — the action is an arithmetic expression over `x`, the amount received, with `min/max/round/ceil/floor/abs` available. Presets: fixed (`50`), percentage (`x * 0.15`), round-up (`ceil(x/5)*5 - x`), keep-back (`max(x - 50, 0)`), or custom. The builder shows a live preview against an example `x`.
-- **PendingRun** — a rule match awaiting review. Runs are **not** automatic: a match raises a notification, and the user confirms (with the amount editable before sending) or dismisses it. Confirmed and dismissed runs both land in history.
+An earlier click-through prototype and a generated design kit are **out of date and must not be cited as authority** — they predate the specs and contradict them (most visibly on the rule model, which is now an ordered step list rather than a formula over `x`, and on colour).
 
-Screens: splash → sign in (Apple/Google) → Face ID opt-in → connect banks, then a four-tab app — Home (primary balance, pending reviews, top rules, recent history), Rules (list + add/edit sheet), Accounts (list, add bank, remove), Settings (Face ID, push, alerts, log out).
+## Design
 
-### Translating the design system to SwiftUI
-
-- Dark-only, true black (`#000`) app background with cool gray surfaces stepped up from it; a single bright green accent `#39FF88` used sparingly (CTAs, active states, positive amounts). No secondary brand hue.
+- Colour comes from the **asset catalogue** and nowhere else. Every colour is a named set with both light and dark appearances defined; the app supports both.
 - Full-radius system: buttons and pills fully rounded; cards and sheets 28–32pt. Never sharp or barely-rounded corners.
-- "Liquid glass" is the signature surface — map it to iOS 26's native glass APIs rather than reimplementing the CSS blur stack. Reserve it for surfaces floating over content (tab bar, sheets, toasts, dashboard cards); use solid surfaces for dense lists (rule lists, transaction rows) where blur hurts legibility.
-- Type: Space Grotesk for display/headlines, the system font for body/UI, JetBrains Mono for money amounts and account numbers. The two non-system faces are Google Fonts in the kit and would need bundling into the app target — confirm licensing and intent before adding them; until then, prefer the system font with `.monospacedDigit()` for amounts.
-- Currency is always NZD with two decimals and thousands separators (`$2,184.30`). Use `Decimal` and `FormatStyle`, not `Double`, for money in real code — the prototype's `Double` balances are prototype convenience.
+- Spacing is a 4pt scale, referenced by name. Nothing uses a value off the scale.
+- "Liquid glass" is the signature surface — use iOS 26's native glass APIs. Reserve it for surfaces floating over content (tab bar, sheets, toasts, the primary action); use solid surfaces for dense lists (rule lists, transaction rows) where blur hurts legibility.
+- Motion: one standard curve, one springier curve for toggles and sheet presentation. Durations 120ms (press), 200ms (default), 340ms (sheets and transitions). Always animate a named value, never implicitly.
+- Type is the system font, with `.monospacedDigit()` for amounts and account numbers. No custom faces are bundled.
+- Icons are real SF Symbols.
+- Currency is always NZD with two decimals and thousands separators (`$2,184.30`). Use `Decimal` and `FormatStyle`, never `Double`, for money.
 - Copy rules: sentence case everywhere, no emoji, no exclamation points, second person ("your rules"). Uppercase tracked text only for small badge/eyebrow labels.
-- The kit substitutes an in-house icon set for SF Symbols because it couldn't bundle Apple's. In the app, use real SF Symbols.
 
 ## Commands
 

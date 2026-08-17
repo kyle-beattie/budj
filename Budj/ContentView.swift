@@ -6,21 +6,29 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct ContentView: View {
-    var body: some View {
-      Color.background.ignoresSafeArea()
-      .overlay(
-        VStack {
-          Image(systemName: "globe")
-            .imageScale(.large)
-            .foregroundStyle(.tint)
-          Text("Hello, world!")
+  @State private var authorizationResult: ASAuthorization? = nil
+  @State private var error: Error? = nil
+  @Environment(\.colorScheme) var colorScheme
+
+  var body: some View {
+      ZStack {
+          Color.background
+          VStack {
+            BudjMark()
+              .frame(height: 148)
+
         }
-      )
+      }
+      .ignoresSafeArea()
+      .accessibilityElement()
+      .accessibilityLabel("budj.")
   }
 }
 
 #Preview {
     ContentView()
 }
+

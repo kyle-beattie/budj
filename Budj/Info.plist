@@ -4,5 +4,25 @@
 <dict>
 	<key>CFBundleIconFile</key>
 	<string>budj</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLIconFile</key>
+			<string>budj</string>
+			<key>CFBundleURLName</key>
+			<string>nz.budj.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>budj</string>
+			</array>
+		</dict>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>BackgroundColor</string>
+	</dict>
 </dict>
 </plist>
