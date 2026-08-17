@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BudjAPIBaseURL</key>
+	<string>$(BUDJ_API_BASE_URL)</string>
+	<key>CFBundleIconFile</key>
+	<string>budj</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- So a debug build can reach a server running on this machine. This
+		     relaxes nothing beyond the local network; every other host still
+		     requires HTTPS. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLIconFile</key>
+			<string>budj</string>
+			<key>CFBundleURLName</key>
+			<string>nz.budj.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>budj</string>
+			</array>
+		</dict>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>BackgroundColor</string>
+	</dict>
+</dict>
+</plist>
