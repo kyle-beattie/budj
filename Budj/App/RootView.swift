@@ -15,7 +15,7 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            ContentView()
+            PlaceholderView()
             if isLaunching {
                 LaunchScreenView()
                     .transition(.opacity)
@@ -33,3 +33,4 @@ struct RootView: View {
 #Preview {
     RootView()
 }
+

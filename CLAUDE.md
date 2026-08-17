@@ -56,9 +56,11 @@ xcodebuild test -scheme Budj -destination 'platform=iOS Simulator,name=iPhone 17
 
 ## Conventions
 
-- **Default actor isolation is `MainActor`** (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`). Unannotated types are already main-actor-isolated; annotate explicitly only to move work *off* the main actor (`nonisolated`, `@concurrent`, actors).
+- **Default actor isolation is `MainActor`** (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`). Unannotated types are already main-actor-isolated; annotate explicitly only to move work *off* the main actor (`nonisolated`, `@concurrent`, actors). It applies to conformances too: an unannotated `struct` gets a main-actor-isolated `Equatable`, which cannot be used from a nonisolated context. **Pure data types — everything in `Core/Models` and the wire types in `Core/Networking` — are declared `nonisolated`.** The test target does *not* set this flag, so test suites touching main-actor types are annotated `@MainActor`.
 - **Unit tests use Swift Testing** (`import Testing`, `@Test`, `#expect`). UI tests use XCTest/XCUIApplication, since XCUITest has no Swift Testing equivalent.
-- Adding a file to the repo does not add it to the build. New sources must be registered in `Budj.xcodeproj/project.pbxproj` (add via Xcode, or edit the pbxproj carefully and verify with a build).
+- `Budj/`, `BudjTests/` and `BudjUITests/` are **synchronised root groups**, so a new `.swift` file anywhere under them joins the build with no `project.pbxproj` edit. Only build settings, capabilities, and membership exceptions need the project file.
+- The API's base address is the `BUDJ_API_BASE_URL` build setting, reaching the app through `Info.plist` as `BudjAPIBaseURL`. Debug points at `http://localhost:3000`; release is fixed at build time and nothing at runtime can redirect it.
+- **No third-party dependencies.** Sign-in calls Supabase's id-token endpoint directly and everything else goes through the Budj server; see D16 in the `add-ios-onboarding` design.
 
 ## SwiftUI guidance
 
