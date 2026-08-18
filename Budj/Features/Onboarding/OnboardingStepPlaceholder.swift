@@ -17,10 +17,16 @@ struct OnboardingStepPlaceholder: View {
     /// Set when a request was refused for want of a subscription, so the
     /// billing step says why it is being shown again.
     var entitlementLapsed = false
+    @Environment(Authenticator.self) private var authenticator
+    @Environment(AppModel.self) private var app
+    @State private var isSigningOut = false
 
     var body: some View {
         StepScaffold(title: title, subtitle: subtitle) {
         } actions: {
+          Button("Sign out") { signOut() }
+              .buttonStyle(BudjButtonStyle(variant: .secondary, isLoading: isSigningOut))
+              .disabled(isSigningOut)
         }
     }
 
@@ -44,7 +50,19 @@ struct OnboardingStepPlaceholder: View {
         default: "This step is still being built."
         }
     }
+
+    private func signOut() {
+        guard !isSigningOut else { return }
+        isSigningOut = true
+        Task {
+            await authenticator.signOut()
+            isSigningOut = false
+            app.signedOut()
+        }
+    }
 }
+
+
 
 #Preview("Billing") {
     OnboardingStepPlaceholder(step: .billing)
