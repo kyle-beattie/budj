@@ -20,7 +20,11 @@ struct BudjApp: App {
     init() {
         let session = SessionStore()
         let api = BudjAPI(session: session)
-        let app = AppModel(session: session, gate: LaunchGateModel(api: api, session: session))
+        let app = AppModel(
+            session: session,
+            gate: LaunchGateModel(api: api, session: session),
+            onboarding: OnboardingModel(api: api)
+        )
         api.interruptionHandler = app
 
         _session = State(initialValue: session)

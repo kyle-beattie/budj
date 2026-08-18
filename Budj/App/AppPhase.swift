@@ -10,14 +10,15 @@ import Foundation
 /// Sign-in lives inside `onboarding` rather than beside it: signing in is the
 /// first onboarding step, and treating it as a separate mode produces two
 /// routers that have to agree.
+///
+/// The step *within* onboarding is not here. `OnboardingModel` holds it, so
+/// there is exactly one thing in the app that knows which step is showing.
 nonisolated enum AppPhase: Equatable {
     /// Restoring the session and working out where to go.
     case launching
 
-    /// Anywhere before the app is usable. `resuming` is the step the server
-    /// reported, or `nil` when nobody is signed in yet and the flow starts at
-    /// its beginning. It is never `.ready` — that outcome is `ready` below.
-    case onboarding(resuming: OnboardingStatus.Step?)
+    /// Anywhere before the app is usable — sign in, and the steps after it.
+    case onboarding
 
     /// Onboarding is finished.
     case ready
