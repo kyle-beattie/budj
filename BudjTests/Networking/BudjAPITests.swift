@@ -316,6 +316,25 @@ struct BudjAPITests {
         #expect(handler.interruptions == [.entitlementLost])
     }
 
+    /// A 401 from sign-in means the password was wrong, not that a session
+    /// ended — there was no session. Announcing one would bounce someone out of
+    /// the screen they are trying to sign in on.
+    @Test func aRefusedSignInDoesNotAnnounceThatTheSessionEnded() async throws {
+        let transport = StubTransport()
+        transport.answers = [.json(401, failure("UNAUTHORIZED", "Invalid email or password"))]
+        let handler = RecordingInterruptionHandler()
+        let api = makeAPI(transport: transport, session: StubSessionStore(current: nil), handler: handler)
+
+        await #expect(throws: APIError.unauthorized) {
+            _ = try await api.send(
+                .signIn(email: "someone@example.com", password: "wrong"),
+                as: BudjSession.self
+            )
+        }
+
+        #expect(handler.interruptions.isEmpty)
+    }
+
     @Test func anOrdinaryFailureInterruptsNothing() async throws {
         let transport = StubTransport()
         transport.answers = [.json(500, failure("INTERNAL_ERROR"))]

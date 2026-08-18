@@ -76,7 +76,7 @@ final class BudjAPI {
         do {
             return try await perform(endpoint, allowingRefresh: true)
         } catch let error as APIError {
-            notify(about: error)
+            notify(about: error, carriedAuthorization: endpoint.requiresAuthorization)
             throw error
         }
     }
@@ -252,13 +252,20 @@ final class BudjAPI {
         }
     }
 
-    private func notify(about error: APIError) {
+    private func notify(about error: APIError, carriedAuthorization: Bool) {
         switch error {
-        case .updateRequired: interruptionHandler?.handle(.updateRequired)
-        case .subscriptionRequired: interruptionHandler?.handle(.entitlementLost)
-        case .unauthorized: interruptionHandler?.handle(.sessionEnded)
-        default: break
+        case .updateRequired:
+            interruptionHandler?.handle(.updateRequired)
+        case .subscriptionRequired:
+            interruptionHandler?.handle(.entitlementLost)
+        case .unauthorized where carriedAuthorization:
+            interruptionHandler?.handle(.sessionEnded)
+        default:
+            break
         }
+        // A 401 from sign-in means the password was wrong, not that a session
+        // ended — there was no session. Announcing one would bounce someone out
+        // of the screen they are trying to sign in on.
     }
 
     // MARK: - Coding
