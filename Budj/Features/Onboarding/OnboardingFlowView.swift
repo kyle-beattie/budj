@@ -24,6 +24,7 @@ struct OnboardingFlowView: View {
 
     var body: some View {
         ZStack {
+            BackgroundView()
             step
                 .transition(BudjMotion.stepTransition(reduceMotion: reduceMotion))
         }
@@ -39,6 +40,11 @@ struct OnboardingFlowView: View {
         }
         .onChange(of: model.step) { _, step in
             switch step {
+            case .welcome:
+                // Signing out lands here, and the sign-in model outlives the
+                // screen. Without this, the front door still holds the last
+                // person's address and password.
+                signIn?.reset()
             case .signIn:
                 // The welcome action decides which way round the screen opens.
                 signIn?.setMode(model.startsRegistering ? .register : .signIn)
@@ -100,3 +106,4 @@ struct OnboardingFlowView: View {
         }
     }
 }
+

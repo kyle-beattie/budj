@@ -193,4 +193,131 @@ struct EmailSignInModelTests {
         model.password = "hunter22"
         #expect(model.canSubmit)
     }
+
+    // MARK: - The model outlives the screen
+
+    /// The defect this exists for. The flow builds one `EmailSignInModel` and
+    /// keeps it, so a second successful sign-in on the same instance left
+    /// `outcome` on the value it already held. The screen reports its result by
+    /// *changing* that, so nothing observed the second success and the person
+    /// stayed on the account-creation screen with their account already made.
+    ///
+    /// Asserted through an attempt that never reaches the network: if `submit`
+    /// clears the outcome up front, an invalid address leaves `nil` behind. If
+    /// it does not, last time's success is still standing.
+    @Test func aStaleSuccessDoesNotSurviveALaterAttempt() async {
+        let transport = StubTransport()
+        transport.answers = [.json(200, Self.session)]
+        let model = makeModel(transport: transport)
+
+        model.email = "someone@example.com"
+        model.password = "hunter22"
+        await model.submit()
+        #expect(model.outcome == .signedIn)
+
+        model.email = "not-an-address"
+        model.password = "hunter22"
+        await model.submit()
+
+        #expect(model.outcome == nil, "A stale success survived the next attempt")
+    }
+
+    /// The observable half of the same fix: a failed second attempt must not
+    /// leave the previous success standing.
+    @Test func aFailedAttemptClearsAnEarlierSuccess() async {
+        let transport = StubTransport()
+        transport.answers = [
+            .json(200, Self.registration),
+            failure(401, "UNAUTHORIZED"),
+        ]
+        let model = makeModel(transport: transport)
+        model.setMode(.register)
+
+        model.email = "first@example.com"
+        model.password = "hunter22"
+        await model.submit()
+        #expect(model.outcome == .signedIn)
+
+        model.setMode(.signIn)
+        model.email = "second@example.com"
+        model.password = "hunter22"
+        await model.submit()
+
+        #expect(model.outcome == nil, "A stale success survived a failed attempt")
+    }
+
+    // MARK: - Emptying the fields
+
+    @Test func switchingModeEmptiesTheFields() {
+        let model = makeModel(transport: StubTransport())
+        model.email = "someone@example.com"
+        model.password = "hunter22"
+
+        model.setMode(.register)
+
+        #expect(model.email.isEmpty)
+        #expect(model.password.isEmpty)
+        #expect(model.outcome == nil)
+    }
+
+    @Test func aSuccessfulSignInEmptiesTheFields() async {
+        let transport = StubTransport()
+        transport.answers = [.json(200, Self.session)]
+        let model = makeModel(transport: transport)
+        model.email = "someone@example.com"
+        model.password = "hunter22"
+
+        await model.submit()
+
+        #expect(model.outcome == .signedIn)
+        #expect(model.email.isEmpty, "An address was left in the field after signing in")
+        #expect(model.password.isEmpty, "A password was left in the field after signing in")
+    }
+
+    /// The one case that keeps the address: the notice that follows names it.
+    @Test func confirmationRequiredKeepsTheAddressButNotThePassword() async {
+        let transport = StubTransport()
+        transport.answers = [.json(200, ["session": NSNull(), "confirmationRequired": true])]
+        let model = makeModel(transport: transport)
+        model.setMode(.register)
+        model.email = "someone@example.com"
+        model.password = "hunter22"
+
+        await model.submit()
+
+        #expect(model.outcome == .confirmationRequired)
+        #expect(model.email == "someone@example.com")
+        #expect(model.password.isEmpty)
+    }
+
+    @Test func resettingEmptiesEverything() async {
+        let transport = StubTransport()
+        transport.answers = [.json(200, Self.session)]
+        let model = makeModel(transport: transport)
+        model.email = "someone@example.com"
+        model.password = "hunter22"
+        await model.submit()
+
+        model.reset()
+
+        #expect(model.email.isEmpty)
+        #expect(model.password.isEmpty)
+        #expect(model.outcome == nil)
+    }
+
+    // MARK: - Fixtures
+
+    private static let session: [String: Any] = [
+        "accessToken": "a",
+        "refreshToken": "r",
+        "tokenType": "bearer",
+        "expiresIn": 3600,
+        "expiresAt": "2026-08-18T05:33:37.000Z",
+        "user": ["id": "u", "email": "someone@example.com", "emailConfirmed": true],
+    ]
+
+    private static let registration: [String: Any] = [
+        "session": session,
+        "confirmationRequired": false,
+    ]
 }

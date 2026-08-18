@@ -18,54 +18,79 @@ struct StepScaffold<Content: View, Actions: View>: View {
     @ViewBuilder let content: () -> Content
     @ViewBuilder let actions: () -> Actions
 
+
+    @State private var currentOffset: CGFloat = 0
+    let maxHeight: CGFloat = 148
+    let minHeight: CGFloat = 40
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
 
-            BudjMark()
-              .frame(height: 148)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, BudjSpacing.section)
-              .accessibilityHidden(true)
-            ScrollView {
-                VStack(alignment: .leading, spacing: BudjSpacing.loose) {
-                    VStack(alignment: .leading, spacing: BudjSpacing.tight) {
-                        Text(title)
-                            .font(BudjTypography.display)
-                            .foregroundStyle(BudjColor.textPrimary)
+      ZStack {
+        BackgroundView()
+        // The action area is a bottom safe-area inset rather than a sibling in
+        // a VStack. As a sibling it took its intrinsic height first and the
+        // scroll view got whatever was left — which in landscape with the
+        // keyboard up was nothing, so the form was laid out and then clipped to
+        // zero height. As an inset the scroll view always has the full
+        // container, and its content is simply pushed clear of the buttons.
+        ScrollView {
+            VStack(alignment: .leading, spacing: BudjSpacing.loose) {
+              BudjLogo(height: currentHeight)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, BudjSpacing.section)
+                .accessibilityHidden(true)
 
-                        if let subtitle {
-                            Text(subtitle)
-                                .font(BudjTypography.body)
-                                .foregroundStyle(BudjColor.textSecondary)
-                        }
-                    }
-                    .accessibilityAddTraits(.isHeader)
+              VStack(alignment: .leading, spacing: BudjSpacing.tight) {
+                Text(title)
+                  .font(BudjTypography.display)
+                  .foregroundStyle(BudjColor.textPrimary)
 
-                    content()
+                if let subtitle {
+                  Text(subtitle)
+                    .font(BudjTypography.body)
+                    .foregroundStyle(BudjColor.textSecondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, BudjSpacing.loose)
-                .padding(.top, BudjSpacing.screen)
-                .padding(.bottom, BudjSpacing.section)
-            }
-            .scrollBounceBehavior(.basedOnSize)
+              }
+              .accessibilityAddTraits(.isHeader)
 
-            VStack(spacing: BudjSpacing.snug) {
-                actions()
+              content()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, BudjSpacing.loose)
-            .padding(.top, BudjSpacing.regular)
-            .padding(.bottom, BudjSpacing.tight)
-            // The action area floats over the content it scrolls past, which is
-            // exactly the case glass is reserved for.
-            .background(.regularMaterial)
+            .padding(.top, BudjSpacing.screen)
+            .padding(.bottom, BudjSpacing.section)
+          }
+        .scrollBounceBehavior(.basedOnSize)
+        // Track the scroll position relative to the container content
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentOffset.y
+        } action: { oldValue, newValue in
+            currentOffset = newValue
+        }
+        .safeAreaInset(edge: .bottom) {
+          VStack(spacing: BudjSpacing.snug) {
+            actions()
+          }
+          .padding(.horizontal, BudjSpacing.loose)
+          .padding(.top, BudjSpacing.loose)
+          .padding(.bottom, BudjSpacing.loose)
+          // The action area floats over the content it scrolls past, which is
+          // exactly the case glass is reserved for.
+          .glassEffect(.clear, in: .rect)
         }
         // Onboarding stays a single column on iPad rather than stretching a
         // form to 13 inches.
         .frame(maxWidth: 560)
         .frame(maxWidth: .infinity)
-        .background(BudjColor.background)
+      }
     }
+
+
+  // Safely calculate the frame height based on scrolling direction
+  private var currentHeight: CGFloat {
+      let calculated = maxHeight - currentOffset
+      return max(minHeight, min(maxHeight, calculated))
+  }
 }
 
 #Preview {

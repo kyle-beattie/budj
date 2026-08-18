@@ -43,6 +43,11 @@ struct EmailSignInView: View {
                     text: $model.password,
                     isSecure: true,
                     error: model.passwordError,
+                    // `.newPassword` on registration, so iOS offers to
+                    // generate and save a strong one. Note for anyone writing a
+                    // UI test against this screen: it hands the field to
+                    // Automatic Strong Password, which XCUITest cannot type
+                    // into — that is an automation limit, not a defect.
                     textContentType: model.mode == .register ? .newPassword : .password,
                     submitLabel: .go,
                     onSubmit: { submit() }
