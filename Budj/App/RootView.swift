@@ -15,6 +15,7 @@ struct RootView: View {
     private static let minimumHold: Duration = .milliseconds(600)
 
     @Environment(AppModel.self) private var app
+    @Environment(EmailConfirmationModel.self) private var confirmation
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var isLaunching = true
@@ -35,6 +36,38 @@ struct RootView: View {
             try? await floor
             isLaunching = false
         }
+        // Presented here rather than from the sign-in screen: the confirmation
+        // link can arrive on a cold start, by which point the screen that
+        // started the flow has never been shown (D17).
+        .sheet(isPresented: isShowingConfirmation) {
+            ConfirmEmailSheet(model: confirmation, onClose: closeConfirmation)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(BudjRadius.extraLarge)
+                .presentationBackground(BudjColor.background)
+                .animation(BudjMotion.springy, value: confirmation.phase)
+        }
+    }
+
+    // MARK: - Confirmation
+
+    private var isShowingConfirmation: Binding<Bool> {
+        Binding(
+            get: { confirmation.isPresented },
+            // A swipe closes it the same way the button does, so a confirmed
+            // session is not stranded behind a gesture.
+            set: { if !$0 { closeConfirmation() } }
+        )
+    }
+
+    /// One exit for the sheet. Closing it after a successful confirmation means
+    /// signing in — the session already exists, so this asks the gate where it
+    /// lands rather than picking a step itself.
+    private func closeConfirmation() {
+        let didConfirm = confirmation.didConfirm
+        confirmation.dismiss()
+        guard didConfirm else { return }
+        Task { await app.signedIn() }
     }
 
     @ViewBuilder
@@ -55,7 +88,7 @@ struct RootView: View {
     }
 }
 
-#Preview {
-    RootView()
-        .environment(AppModel.preview())
-}
+//#Preview {
+//    RootView()
+//        .environment(AppModel.preview())
+//}

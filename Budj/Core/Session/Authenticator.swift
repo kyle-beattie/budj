@@ -57,6 +57,22 @@ final class Authenticator {
         return registration
     }
 
+    /// Turns what an address-confirmation link came back with into a session
+    /// (D17).
+    ///
+    /// The link's refresh token is exchanged rather than its access token
+    /// adopted, so the session arrives on the same route and in the same shape
+    /// as every other one — nothing downstream can tell a just-confirmed address
+    /// from an ordinary sign-in, and the app never decodes a JWT to find out who
+    /// the user is.
+    func completeEmailConfirmation(refreshToken: String) async throws {
+        let established: BudjSession = try await api.send(
+            .exchange(refreshToken: refreshToken),
+            as: BudjSession.self
+        )
+        session.replace(with: established)
+    }
+
     // MARK: - Sign in with Apple
 
     /// The two artifacts Apple hands back go to two different places, and
