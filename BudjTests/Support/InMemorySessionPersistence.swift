@@ -12,6 +12,7 @@ final class InMemorySessionPersistence: SessionPersistence {
     private(set) var stored: BudjSession?
     private(set) var storedRequiringBiometry = false
     private(set) var removeCount = 0
+    private(set) var loadCount = 0
 
     /// Set to make `load()` fail the way a cancelled biometric prompt does.
     var loadError: (any Error)?
@@ -21,6 +22,7 @@ final class InMemorySessionPersistence: SessionPersistence {
     }
 
     func load() throws -> BudjSession? {
+        loadCount += 1
         if let loadError { throw loadError }
         return stored
     }

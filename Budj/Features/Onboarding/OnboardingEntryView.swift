@@ -7,10 +7,14 @@ import SwiftUI
 
 /// The way into onboarding, and the owner of the state behind it.
 ///
-/// Today that is one screen. When the server-derived step router arrives (task
-/// 9.2) it switches here, with sign-in as the case that runs when there is no
-/// session yet.
+/// It switches on the step the launch gate resolved, with sign-in as the case
+/// that runs when there is no session yet. The value-driven router that
+/// replaces this switch, and the real screens behind each step, are tasks 9.2
+/// and 9.3.
 struct OnboardingEntryView: View {
+    /// The server's step, or `nil` when nobody is signed in.
+    var resuming: OnboardingStatus.Step?
+
     @Environment(Authenticator.self) private var authenticator
     @Environment(AppModel.self) private var app
 
@@ -18,8 +22,14 @@ struct OnboardingEntryView: View {
 
     var body: some View {
         Group {
-            if let model {
-                EmailSignInView(model: model, onSignedIn: app.signedIn)
+            if let resuming {
+                OnboardingStepPlaceholder(step: resuming)
+            } else if let model {
+                EmailSignInView(model: model) {
+                    // The gate decides where signing in lands, so this does not
+                    // set a phase of its own.
+                    Task { await app.signedIn() }
+                }
             } else {
                 BudjColor.background.ignoresSafeArea()
             }

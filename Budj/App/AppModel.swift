@@ -20,31 +20,55 @@ final class AppModel: APIInterruptionHandler {
     private(set) var endedUnexpectedly = false
 
     private let session: SessionStore
+    private let gate: LaunchGateModel
 
-    init(session: SessionStore) {
+    init(session: SessionStore, gate: LaunchGateModel) {
         self.session = session
+        self.gate = gate
     }
 
-    /// Resolves where to start from.
+    /// Resolves where to start from, and where the retry behind
+    /// `UnreachableView` goes too — the question is the same one, and asking it
+    /// twice through two code paths is how the two answers start to differ.
     ///
-    /// Reading the stored session is the whole of it for now. The rest of the
-    /// launch gate — unlocking a biometry-protected item, fetching onboarding
-    /// status, and the retryable failure that comes with it — is task 8.1, and
-    /// until it exists a restored session goes straight to `ready`.
-    func start() {
-        phase = session.restore() ? .ready : .onboarding
+    /// The phase is not reset to `launching` first: on a retry the failure
+    /// screen stays put with its button spinning, rather than flashing back to
+    /// the launch mark.
+    func start() async {
+        apply(await gate.resolve())
     }
 
     /// Called when authentication produced a session.
-    func signedIn() {
+    ///
+    /// It re-runs the gate rather than assuming `ready`, because the server
+    /// decides the step and a fresh account's first step is billing, not the
+    /// app. Task 9.4 owns the same refresh after purchase and after the bank
+    /// session returns.
+    func signedIn() async {
         endedUnexpectedly = false
-        phase = .ready
+        await start()
     }
 
     /// Called when the user asks to leave.
     func signedOut() {
         endedUnexpectedly = false
-        phase = .onboarding
+        phase = .onboarding(resuming: nil)
+    }
+
+    // MARK: - Applying a destination
+
+    private func apply(_ destination: LaunchDestination) {
+        // `mustUpdate` is terminal and outranks everything, including a
+        // destination resolved before the refusal that produced it arrived.
+        guard phase != .mustUpdate else { return }
+
+        phase = switch destination {
+        case .signIn: .onboarding(resuming: nil)
+        case let .onboarding(step): .onboarding(resuming: step)
+        case .ready: .ready
+        case .unreachable: .unreachable
+        case .mustUpdate: .mustUpdate
+        }
     }
 
     // MARK: - APIInterruptionHandler
@@ -57,11 +81,21 @@ final class AppModel: APIInterruptionHandler {
             phase = .mustUpdate
         case .sessionEnded:
             endedUnexpectedly = true
-            phase = .onboarding
+            phase = .onboarding(resuming: nil)
         case .entitlementLost:
-            // Returns to onboarding, where the billing step will explain it once
-            // the paywall exists (task 11.x).
-            phase = .onboarding
+            // The billing step will explain it once the paywall exists (11.x).
+            phase = .onboarding(resuming: .billing)
         }
     }
 }
+
+#if DEBUG
+extension AppModel {
+    /// A model wired to an empty store, for previews. It resolves nothing,
+    /// because a preview has no server to ask.
+    static func preview() -> AppModel {
+        let session = SessionStore()
+        return AppModel(session: session, gate: LaunchGateModel(api: BudjAPI(session: session), session: session))
+    }
+}
+#endif
