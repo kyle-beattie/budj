@@ -10,18 +10,21 @@ import SwiftUI
 /// This is the artwork from `budj.icon` without its rounded-square tile — the
 /// tile's fill and `BackgroundColor` are all but identical in both appearances,
 /// so the mark reads as the app icon floating on the app background.
-struct BudjMark: View {
+struct BudjLogo: View {
+    let height: CGFloat
+
     var body: some View {
-        ZStack {
-            BudjMarkShape(layer: .stem)
-                .fill(Color.markStem)                
-            BudjMarkShape(layer: .backCoin)
-                .fill(Color.markBackCoin.opacity(0.8))
-            BudjMarkShape(layer: .frontCoin)
-                .fill(Color.markFrontCoin)
-        }
-        .aspectRatio(BudjMarkShape.aspectRatio, contentMode: .fit)
-        .accessibilityHidden(true)
+      ZStack {
+        BudjMarkShape(layer: .stem)
+          .fill(Color.markStem)
+        BudjMarkShape(layer: .backCoin)
+          .fill(Color.markBackCoin.opacity(0.8))
+        BudjMarkShape(layer: .frontCoin)
+          .fill(Color.markFrontCoin)
+      }
+      .aspectRatio(BudjMarkShape.aspectRatio, contentMode: .fit)
+      .accessibilityHidden(true)
+      .frame(height: height)
     }
 }
 
@@ -32,8 +35,6 @@ extension Color {
 }
 
 #Preview {
-    BudjMark()
-        .frame(height: 160)
+    BudjLogo(height: 160)
         .padding(64)
-        .background(Color.background)
 }

@@ -10,14 +10,6 @@
 	<string>$(BUDJ_SUPABASE_URL)</string>
 	<key>CFBundleIconFile</key>
 	<string>budj</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<!-- So a debug build can reach a server running on this machine. This
-		     relaxes nothing beyond the local network; every other host still
-		     requires HTTPS. -->
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -33,8 +25,11 @@
 			</array>
 		</dict>
 	</array>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Budj uses Face ID to unlock your saved sign-in, so you do not have to enter your password every time you open the app.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

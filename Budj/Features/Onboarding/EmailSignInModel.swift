@@ -54,6 +54,18 @@ final class EmailSignInModel {
     func setMode(_ mode: Mode) {
         guard mode != self.mode else { return }
         self.mode = mode
+        reset()
+    }
+
+    /// Empties the screen.
+    ///
+    /// The model outlives the screen — the flow builds one and keeps it — so
+    /// without this a signed-out user finds their own address and password
+    /// still filled in, and `outcome` still reading `signedIn` from last time.
+    func reset() {
+        email = ""
+        password = ""
+        outcome = nil
         clearErrors()
     }
 
@@ -72,6 +84,12 @@ final class EmailSignInModel {
     func submit() async {
         guard !isWorking else { return }
         clearErrors()
+        // Cleared before the attempt, not after it. The screen reports its
+        // result by *changing* this, and a second success that leaves it on the
+        // value it already held is a change nobody observes — which is exactly
+        // what stranded people on this screen after signing out and creating a
+        // second account.
+        outcome = nil
         guard validate() else { return }
 
         isWorking = true
@@ -81,19 +99,36 @@ final class EmailSignInModel {
             switch mode {
             case .signIn:
                 try await authenticator.signIn(email: trimmedEmail, password: password)
+                clearCredentials()
                 outcome = .signedIn
             case .register:
                 let registration = try await authenticator.register(
                     email: trimmedEmail,
                     password: password
                 )
-                outcome = registration.session == nil ? .confirmationRequired : .signedIn
+                if registration.session == nil {
+                    // The address stays: the notice that follows names it, and
+                    // an empty field under "check your email" is worse than a
+                    // filled one. The password has done its job either way.
+                    password = ""
+                    outcome = .confirmationRequired
+                } else {
+                    clearCredentials()
+                    outcome = .signedIn
+                }
             }
         } catch let error as APIError {
             describe(error)
         } catch {
             formError = "Something went wrong. Try again."
         }
+    }
+
+    /// Emptied once the credentials have been accepted, so nothing is left
+    /// lying in a field for whoever opens the app next.
+    private func clearCredentials() {
+        email = ""
+        password = ""
     }
 
     // MARK: - Validation
