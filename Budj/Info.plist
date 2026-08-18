@@ -29,6 +29,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Budj uses Face ID to unlock your saved sign-in, so you do not have to enter your password every time you open the app.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
