@@ -29,7 +29,12 @@ struct BudjApp: App {
 
         _session = State(initialValue: session)
         _api = State(initialValue: api)
-        _authenticator = State(initialValue: Authenticator(api: api, session: session))
+        // Provider sign-in is offered only when the build carries a Supabase
+        // address and key. Without them the button would be a control that
+        // cannot work, so it is not shown at all.
+        let identity = SupabaseConfiguration.current.map { SupabaseIdentity(configuration: $0) }
+
+        _authenticator = State(initialValue: Authenticator(api: api, session: session, identity: identity))
         _app = State(initialValue: app)
     }
 
