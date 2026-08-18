@@ -20,10 +20,18 @@ final class Authenticator {
     private let api: BudjAPI
     private let session: SessionStore
 
-    init(api: BudjAPI, session: SessionStore) {
+    /// The direct Supabase call, or `nil` when the build carries no Supabase
+    /// configuration. Provider sign-in is offered only when this exists, rather
+    /// than showing a button that cannot work.
+    private let identity: SupabaseIdentity?
+
+    init(api: BudjAPI, session: SessionStore, identity: SupabaseIdentity? = nil) {
         self.api = api
         self.session = session
+        self.identity = identity
     }
+
+    var offersProviderSignIn: Bool { identity != nil }
 
     // MARK: - Email and password
 
@@ -47,6 +55,64 @@ final class Authenticator {
             session.replace(with: established)
         }
         return registration
+    }
+
+    // MARK: - Sign in with Apple
+
+    /// The two artifacts Apple hands back go to two different places, and
+    /// neither substitutes for the other (D7):
+    ///
+    /// ```
+    ///   identityToken ─────► Supabase      (never touches the Budj server)
+    ///   authorizationCode ─► the Budj server (never touches Supabase)
+    /// ```
+    ///
+    /// Getting this backwards produces an app that works perfectly and an
+    /// account that can never be properly deleted, discovered in
+    /// `add-account-deletion` months from now. `AppleSignInTests` is the
+    /// assertion that stops it.
+    ///
+    /// The code is posted *after* the session exists, because that route is
+    /// authenticated. A failure posting it does not fail sign-in: the user is
+    /// already signed in, the code is single-use and cannot be retried, and
+    /// refusing them entry over a deletion concern they will not meet for
+    /// months would be the wrong trade.
+    @discardableResult
+    func signInWithApple(_ credential: AppleCredential) async throws -> Bool {
+        guard let identity else {
+            throw APIError.decoding("This build carries no Supabase configuration")
+        }
+
+        let established = try await identity.signIn(
+            provider: .apple,
+            identityToken: credential.identityToken,
+            // Present on the first authorisation and never again. Absent is
+            // ordinary, and never a reason to invent one from the address.
+            fullName: credential.fullName
+        )
+        session.replace(with: established)
+
+        return await postAppleGrant(credential.authorizationCode)
+    }
+
+    /// Best-effort, and the return value is for tests and logging rather than
+    /// for routing. Returns whether the server stored the grant.
+    private func postAppleGrant(_ authorizationCode: String) async -> Bool {
+        do {
+            let outcome: AppleGrant = try await api.send(
+                .appleGrant(authorizationCode: authorizationCode),
+                as: AppleGrant.self
+            )
+            if !outcome.stored {
+                // The server answers 200 even when Apple refuses the exchange,
+                // because the caller is signed in and there is nothing to retry.
+                print("[identity] Apple grant not stored: \(outcome.reason ?? "no reason given")")
+            }
+            return outcome.stored
+        } catch {
+            print("[identity] Apple grant post failed: \(error)")
+            return false
+        }
     }
 
     // MARK: - Ending it

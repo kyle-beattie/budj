@@ -14,7 +14,11 @@ struct EmailSignInView: View {
     @Bindable var model: EmailSignInModel
     let onSignedIn: () -> Void
 
+    @Environment(Authenticator.self) private var authenticator
+
     @FocusState private var focus: Field?
+    @State private var isSigningInWithApple = false
+    @State private var appleError: String?
 
     private enum Field { case email, password }
 
@@ -52,20 +56,40 @@ struct EmailSignInView: View {
                         .transition(.opacity)
                 }
 
+                if let appleError {
+                    Text(appleError)
+                        .font(BudjTypography.caption)
+                        .foregroundStyle(BudjColor.danger)
+                        .transition(.opacity)
+                }
+
                 if model.outcome == .confirmationRequired {
                     ConfirmEmailNotice(email: model.email)
                 }
             }
             .animation(BudjMotion.standard, value: model.formError)
             .animation(BudjMotion.standard, value: model.outcome)
+            .animation(BudjMotion.standard, value: appleError)
         } actions: {
+            if authenticator.offersProviderSignIn {
+                AppleSignInButton(
+                    onCredential: signInWithApple,
+                    onFailure: { appleError = $0 }
+                )
+                .disabled(isSigningInWithApple || model.isWorking)
+
+                Text("or")
+                    .font(BudjTypography.caption)
+                    .foregroundStyle(BudjColor.textSecondary)
+            }
+
             Button(primaryActionTitle) { submit() }
                 .buttonStyle(.budjPrimary(isLoading: model.isWorking))
-                .disabled(!model.canSubmit)
+                .disabled(!model.canSubmit || isSigningInWithApple)
 
             Button(switchActionTitle) { model.setMode(model.mode.other) }
                 .buttonStyle(.budjQuiet)
-                .disabled(model.isWorking)
+                .disabled(model.isWorking || isSigningInWithApple)
         }
         .animation(BudjMotion.standard, value: model.mode)
         .onChange(of: model.outcome) { _, outcome in
@@ -78,6 +102,23 @@ struct EmailSignInView: View {
     private func submit() {
         focus = nil
         Task { await model.submit() }
+    }
+
+    private func signInWithApple(_ credential: AppleCredential) {
+        guard !isSigningInWithApple else { return }
+        focus = nil
+        appleError = nil
+        isSigningInWithApple = true
+        Task {
+            do {
+                try await authenticator.signInWithApple(credential)
+                isSigningInWithApple = false
+                onSignedIn()
+            } catch {
+                isSigningInWithApple = false
+                appleError = "We couldn't finish signing you in. Try again, or use your email address."
+            }
+        }
     }
 
     // MARK: - Copy

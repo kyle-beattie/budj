@@ -4,6 +4,10 @@
 <dict>
 	<key>BudjAPIBaseURL</key>
 	<string>$(BUDJ_API_BASE_URL)</string>
+	<key>BudjSupabaseAnonKey</key>
+	<string>$(BUDJ_SUPABASE_ANON_KEY)</string>
+	<key>BudjSupabaseURL</key>
+	<string>$(BUDJ_SUPABASE_URL)</string>
 	<key>CFBundleIconFile</key>
 	<string>budj</string>
 	<key>NSAppTransportSecurity</key>
