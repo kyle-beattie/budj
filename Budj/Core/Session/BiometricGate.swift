@@ -18,7 +18,11 @@ import Foundation
 struct BiometricGate {
     /// Shown under the system prompt's title. Sentence case, second person, and
     /// says what unlocking gets you rather than what it authorises.
-    static let unlockReason = "Unlock your saved sign-in."
+    ///
+    /// `nonisolated` because it is a default argument, and those are evaluated
+    /// in a nonisolated context — main-actor-isolated by default, it warns
+    /// today and fails to compile in the Swift 6 language mode (task 2.5).
+    nonisolated static let unlockReason = "Unlock your saved sign-in."
 
     private let evaluator: any BiometricEvaluating
 

@@ -5,12 +5,13 @@
 
 import SwiftUI
 
-/// Holds the launch screen over the app while it works out where to start, then
-/// shows whatever `AppModel` resolved.
+/// Holds the launch screen over the launch gate's work, then shows whatever it
+/// resolved.
 struct RootView: View {
     /// A floor rather than a delay: the launch screen is dismissed when the work
     /// is done or this has elapsed, whichever is later, so a fast path does not
-    /// flash rather than being padded to a fixed interval.
+    /// flash rather than being padded to a fixed interval. A slow one is not cut
+    /// short — nothing renders a step the gate has not resolved.
     private static let minimumHold: Duration = .milliseconds(600)
 
     @Environment(AppModel.self) private var app
@@ -30,7 +31,7 @@ struct RootView: View {
         .animation(reduceMotion ? .none : BudjMotion.transition, value: app.phase)
         .task {
             async let floor: Void = Task.sleep(for: Self.minimumHold)
-            app.start()
+            await app.start()
             try? await floor
             isLaunching = false
         }
@@ -42,10 +43,12 @@ struct RootView: View {
         case .launching:
             // Nothing behind the launch screen yet; the mark is already there.
             BudjColor.background.ignoresSafeArea()
-        case .onboarding:
-            OnboardingEntryView()
+        case let .onboarding(resuming):
+            OnboardingEntryView(resuming: resuming)
         case .ready:
             PlaceholderView()
+        case .unreachable:
+            UnreachableView()
         case .mustUpdate:
             MustUpdateView()
         }
@@ -54,5 +57,5 @@ struct RootView: View {
 
 #Preview {
     RootView()
-        .environment(AppModel(session: SessionStore()))
+        .environment(AppModel.preview())
 }
