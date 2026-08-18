@@ -43,8 +43,8 @@ struct RootView: View {
         case .launching:
             // Nothing behind the launch screen yet; the mark is already there.
             BudjColor.background.ignoresSafeArea()
-        case let .onboarding(resuming):
-            OnboardingEntryView(resuming: resuming)
+        case .onboarding:
+            OnboardingFlowView(model: app.onboarding)
         case .ready:
             PlaceholderView()
         case .unreachable:
