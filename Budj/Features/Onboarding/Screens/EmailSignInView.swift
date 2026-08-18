@@ -15,6 +15,7 @@ struct EmailSignInView: View {
     let onSignedIn: () -> Void
 
     @Environment(Authenticator.self) private var authenticator
+    @Environment(EmailConfirmationModel.self) private var confirmation
 
     @FocusState private var focus: Field?
     @State private var isSigningInWithApple = false
@@ -67,13 +68,8 @@ struct EmailSignInView: View {
                         .foregroundStyle(BudjColor.danger)
                         .transition(.opacity)
                 }
-
-                if model.outcome == .confirmationRequired {
-                    ConfirmEmailNotice(email: model.email)
-                }
             }
             .animation(BudjMotion.standard, value: model.formError)
-            .animation(BudjMotion.standard, value: model.outcome)
             .animation(BudjMotion.standard, value: appleError)
         } actions: {
             if authenticator.offersProviderSignIn {
@@ -98,7 +94,17 @@ struct EmailSignInView: View {
         }
         .animation(BudjMotion.standard, value: model.mode)
         .onChange(of: model.outcome) { _, outcome in
-            if outcome == .signedIn { onSignedIn() }
+            switch outcome {
+            case .signedIn:
+                onSignedIn()
+            case .confirmationRequired:
+                // Not a failure and not an error: the account exists. The sheet
+                // carries the rest of it, and outlives this screen because the
+                // link comes back long after it (D17).
+                confirmation.awaitConfirmation(of: model.email)
+            case .none:
+                break
+            }
         }
     }
 

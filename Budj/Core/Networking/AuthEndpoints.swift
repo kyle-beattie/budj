@@ -28,6 +28,20 @@ nonisolated extension Endpoint {
         )
     }
 
+    /// Exchanges a refresh token for a session, unauthenticated — the refresh
+    /// token *is* the authorisation.
+    ///
+    /// `BudjAPI` refreshes an expiring session on its own path and does not come
+    /// through here. This is for the one case where the app holds a refresh
+    /// token and no session at all: the address-confirmation link (D17).
+    static func exchange(refreshToken: String) -> Endpoint {
+        .post(
+            "/api/auth/refresh",
+            body: RefreshRequest(refreshToken: refreshToken),
+            requiresAuthorization: false
+        )
+    }
+
     /// Revokes the tokens server-side. Answers `204` with no body.
     static var signOut: Endpoint {
         .post("/api/auth/sign-out")
@@ -48,6 +62,10 @@ nonisolated extension Endpoint {
         let email: String
         let password: String
         let displayName: String?
+    }
+
+    private struct RefreshRequest: Encodable {
+        let refreshToken: String
     }
 
     private struct EmailRequest: Encodable {

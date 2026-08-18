@@ -16,6 +16,7 @@ struct BudjApp: App {
     @State private var api: BudjAPI
     @State private var authenticator: Authenticator
     @State private var app: AppModel
+    @State private var confirmation: EmailConfirmationModel
 
     init() {
         let session = SessionStore()
@@ -34,8 +35,13 @@ struct BudjApp: App {
         // cannot work, so it is not shown at all.
         let identity = SupabaseConfiguration.current.map { SupabaseIdentity(configuration: $0) }
 
-        _authenticator = State(initialValue: Authenticator(api: api, session: session, identity: identity))
+        let authenticator = Authenticator(api: api, session: session, identity: identity)
+        _authenticator = State(initialValue: authenticator)
         _app = State(initialValue: app)
+        // App-scoped, not screen-scoped: the address-confirmation link comes
+        // back minutes later and possibly to a cold start, so whatever holds its
+        // state has to outlive the screen that started it (D17).
+        _confirmation = State(initialValue: EmailConfirmationModel(authenticator: authenticator))
     }
 
     var body: some Scene {
@@ -44,10 +50,13 @@ struct BudjApp: App {
                 .environment(session)
                 .environment(app)
                 .environment(authenticator)
+                .environment(confirmation)
                 .onOpenURL { url in
-                    // Deep-link handling lands here; the bank authorisation
-                    // callback (task 12.2) is the first thing that will need it.
-                    print("App opened via URL: \(url)")
+                    // Each handler answers whether the URL was one of its own,
+                    // so adding the bank authorisation callback (task 12.2) is
+                    // another line here rather than a rewrite of this one.
+                    guard !confirmation.open(url) else { return }
+                    print("App opened via an unhandled URL: \(url)")
                 }
         }
     }
