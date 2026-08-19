@@ -13,6 +13,10 @@ import SwiftUI
 struct BudjLogo: View {
     let height: CGFloat
 
+    let stemShape = BudjMarkShape(layer: .stem)
+    let backCoinShape = BudjMarkShape(layer: .backCoin)
+    let frontCoinShape = BudjMarkShape(layer: .frontCoin)
+
     var body: some View {
       ZStack {
         BudjMarkShape(layer: .stem)
@@ -21,6 +25,20 @@ struct BudjLogo: View {
           .fill(Color.markBackCoin.opacity(0.8))
         BudjMarkShape(layer: .frontCoin)
           .fill(Color.markFrontCoin)
+
+
+        Rectangle()
+            .fill(.clear)
+            .glassEffect(.clear, in: stemShape)
+            .frame(height: height)
+//        Rectangle()
+//            .fill(.clear)
+//            .glassEffect(.clear, in: backCoinShape)
+//            .frame(height: height)
+        Rectangle()
+            .fill(.clear)
+            .glassEffect(.clear, in: frontCoinShape)
+            .frame(height: height)
       }
       .aspectRatio(BudjMarkShape.aspectRatio, contentMode: .fit)
       .accessibilityHidden(true)

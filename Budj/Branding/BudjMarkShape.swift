@@ -109,37 +109,103 @@ struct AnimatingBudjMarkShape: View {
     @State private var backCoinColor = Color.markBackCoin.opacity(0.8)
     @State private var frontCoinColor = Color.mint
 
+
+    let stemShape = BudjMarkShape(layer: .stem)
+    let backCoinShape = BudjMarkShape(layer: .backCoin)
+    let frontCoinShape = BudjMarkShape(layer: .frontCoin)
+
     var body: some View {
       ZStack {
-          BudjMarkShape(layer: .stem)
-              .fill(Color.markStem)
-          BudjMarkShape(layer: .backCoin)
-              .fill(backCoinColor)
-              .frame(height: 148)
-              .offset(x: pulse, y: 0)
-              .opacity(opacity)
-              .onAppear{
-                withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
-                    pulse = 10
-                    opacity = 0.8;
-                  backCoinColor = Color.mint
-                  }
+        BudjMarkShape(layer: .stem)
+          .fill(Color.markStem)
+        BudjMarkShape(layer: .backCoin)
+          .fill(backCoinColor)
+          .frame(height: 148)
+          .offset(x: pulse, y: 0)
+          .opacity(opacity)
+          .onAppear{
+            withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
+                pulse = 10
+                opacity = 0.8;
+              backCoinColor = Color.mint
               }
-          BudjMarkShape(layer: .frontCoin)
-              .fill(frontCoinColor)
-              .frame(height: 148)
-              .offset(x: -pulse, y: 0)
-              .opacity(opacity)
-              .onAppear{
-                withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
-                    pulse = -10
-                    opacity = 0.8;
-                    frontCoinColor = Color.markBackCoin.opacity(0.8)
-                  }
+          }
+        BudjMarkShape(layer: .frontCoin)
+          .fill(frontCoinColor)
+          .frame(height: 148)
+          .offset(x: -pulse, y: 0)
+          .opacity(opacity)
+          .onAppear{
+            withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
+                pulse = -10
+                opacity = 0.8;
+                frontCoinColor = Color.markBackCoin.opacity(0.8)
               }
+          }
+
+
+        Rectangle()
+            .fill(.clear)
+            .glassEffect(.clear, in: stemShape)
+            .frame(height: 160)
+//        Rectangle()
+//            .fill(.clear)
+//            .glassEffect(.clear, in: backCoinShape)
+//            .frame(height: height)
+        Rectangle()
+            .fill(.clear)
+            .glassEffect(.clear, in: frontCoinShape)
+            .frame(height: 160)
+            .offset(x: -pulse, y: 0)
+            .opacity(opacity)
+            .onAppear{
+              withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
+                  pulse = -10
+                  opacity = 0.8;
+                  frontCoinColor = Color.markBackCoin.opacity(0.8)
+                }
+            }
       }
       .aspectRatio(BudjMarkShape.aspectRatio, contentMode: .fit)
       .accessibilityHidden(true)
+      .frame(height: 160)
+
+
+
+
+//      ZStack {
+//          BudjMarkShape(layer: .stem)
+//              .fill(Color.markStem)
+//          BudjMarkShape(layer: .backCoin)
+//              .fill(backCoinColor)
+//              .frame(height: 148)
+//              .offset(x: pulse, y: 0)
+//              .opacity(opacity)
+//              .onAppear{
+//                withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
+//                    pulse = 10
+//                    opacity = 0.8;
+//                  backCoinColor = Color.mint
+//                  }
+//              }
+//          BudjMarkShape(layer: .frontCoin)
+//              .fill(frontCoinColor)
+//              .frame(height: 148)
+//              .offset(x: -pulse, y: 0)
+//              .opacity(opacity)
+//              .onAppear{
+//                withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
+//                    pulse = -10
+//                    opacity = 0.8;
+//                    frontCoinColor = Color.markBackCoin.opacity(0.8)
+//                  }
+//              }
+//      }
+//      .aspectRatio(BudjMarkShape.aspectRatio, contentMode: .fit)
+//      .accessibilityHidden(true)
+//
+
+
     }
 }
 
