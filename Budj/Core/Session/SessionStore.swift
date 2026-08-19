@@ -22,16 +22,26 @@ final class SessionStore: SessionProviding {
 
     /// Whether the session is written behind biometry. Set by the biometric
     /// opt-in step; every write after that honours it.
+    ///
+    /// **Read from storage rather than defaulted**, because every write consults
+    /// it: a value that started at `false` each launch meant the first token
+    /// refresh after relaunching quietly rewrote the session without its access
+    /// control, and Face ID was never asked for again.
     private(set) var requiresBiometry: Bool
 
     private let persistence: any SessionPersistence
+    private let preference: any BiometricPreferenceStore
 
     init(
         persistence: any SessionPersistence = KeychainSessionPersistence(),
-        requiresBiometry: Bool = false
+        preference: (any BiometricPreferenceStore)? = nil
     ) {
         self.persistence = persistence
-        self.requiresBiometry = requiresBiometry
+        // Not a default argument: those are evaluated in a nonisolated context,
+        // which main-actor types cannot be (task 2.5).
+        let preference = preference ?? DefaultsBiometricPreference()
+        self.preference = preference
+        self.requiresBiometry = preference.requiresBiometry
     }
 
     // MARK: - Restoring
@@ -76,9 +86,24 @@ final class SessionStore: SessionProviding {
     /// Rewrites the stored session with or without the biometric access
     /// control. Turning it on cannot be done by updating the existing item, so
     /// this rewrites it.
-    func setRequiresBiometry(_ required: Bool) {
+    ///
+    /// Returns whether the stored item now matches. The failure is not
+    /// hypothetical — a Keychain write can be refused — and a screen that says
+    /// "Face ID is on" over a session that is not behind it is worse than one
+    /// that admits it could not.
+    @discardableResult
+    func setRequiresBiometry(_ required: Bool) -> Bool {
         requiresBiometry = required
-        guard let current else { return }
-        try? persistence.save(current, requiringBiometry: required)
+        preference.setRequiresBiometry(required)
+
+        guard let current else { return true }
+        do {
+            try persistence.save(current, requiringBiometry: required)
+            return true
+        } catch {
+            // The preference stays as asked so the next successful write
+            // honours it, but the caller is told this one did not take.
+            return false
+        }
     }
 }

@@ -62,9 +62,13 @@ final class AppModel: APIInterruptionHandler {
     /// Called when the user asks to leave.
     func signedOut() {
         endedUnexpectedly = false
-        onboarding.seed(serverStep: nil)
+        onboarding.seed(serverStep: nil, userID: nil)
         phase = .onboarding
     }
+
+    /// The signed-in user, or `nil`. The store is the app's single answer to
+    /// who that is, so the router is told rather than keeping a copy.
+    private var currentUserID: String? { session.current?.user.id }
 
     // MARK: - Applying a destination
 
@@ -75,15 +79,15 @@ final class AppModel: APIInterruptionHandler {
 
         switch destination {
         case .signIn:
-            onboarding.seed(serverStep: nil)
+            onboarding.seed(serverStep: nil, userID: currentUserID)
             phase = .onboarding
 
         case let .onboarding(step):
-            onboarding.seed(serverStep: step)
+            onboarding.seed(serverStep: step, userID: currentUserID)
             phase = .onboarding
 
         case .ready:
-            onboarding.seed(serverStep: .ready)
+            onboarding.seed(serverStep: .ready, userID: currentUserID)
             // The push step is invisible to the server, so `ready` from the
             // gate is not necessarily ready to the router. Somebody who
             // connected their bank and relaunched before being asked about
@@ -108,12 +112,12 @@ final class AppModel: APIInterruptionHandler {
             phase = .mustUpdate
         case .sessionEnded:
             endedUnexpectedly = true
-            onboarding.seed(serverStep: nil)
+            onboarding.seed(serverStep: nil, userID: nil)
             phase = .onboarding
         case .entitlementLost:
             // Back to billing, and the step says why rather than reappearing
             // unexplained.
-            onboarding.seed(serverStep: .billing, entitlementLapsed: true)
+            onboarding.seed(serverStep: .billing, userID: currentUserID, entitlementLapsed: true)
             phase = .onboarding
         }
     }

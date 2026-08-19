@@ -10,9 +10,12 @@ import Foundation
 /// A protocol so the router's "never offer twice" rule can be tested without
 /// touching the real defaults, which persist between test runs and would make
 /// the second run of a test disagree with the first.
+///
+/// `userID` is the session the question is being asked about, and is `nil`
+/// before anybody is signed in. A step scoped to the device ignores it.
 protocol ClientStepRecord {
-    func hasOffered(_ step: ClientOnlyStep) -> Bool
-    func recordOffered(_ step: ClientOnlyStep)
+    func hasOffered(_ step: ClientOnlyStep, userID: String?) -> Bool
+    func recordOffered(_ step: ClientOnlyStep, userID: String?)
 }
 
 /// The real one.
@@ -30,11 +33,21 @@ struct DefaultsStepRecord: ClientStepRecord {
         self.defaults = defaults
     }
 
-    func hasOffered(_ step: ClientOnlyStep) -> Bool {
-        defaults.bool(forKey: Self.prefix + step.rawValue)
+    func hasOffered(_ step: ClientOnlyStep, userID: String?) -> Bool {
+        defaults.bool(forKey: Self.key(step, userID))
     }
 
-    func recordOffered(_ step: ClientOnlyStep) {
-        defaults.set(true, forKey: Self.prefix + step.rawValue)
+    func recordOffered(_ step: ClientOnlyStep, userID: String?) {
+        defaults.set(true, forKey: Self.key(step, userID))
+    }
+
+    /// A user-scoped step with nobody signed in has no key of its own to write.
+    /// It falls back to the bare one rather than inventing a shared bucket that
+    /// the next person to sign in would inherit.
+    private static func key(_ step: ClientOnlyStep, _ userID: String?) -> String {
+        guard step.scope == .user, let userID, !userID.isEmpty else {
+            return prefix + step.rawValue
+        }
+        return "\(prefix)\(step.rawValue).\(userID)"
     }
 }

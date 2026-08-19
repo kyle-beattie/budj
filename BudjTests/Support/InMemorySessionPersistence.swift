@@ -17,6 +17,10 @@ final class InMemorySessionPersistence: SessionPersistence {
     /// Set to make `load()` fail the way a cancelled biometric prompt does.
     var loadError: (any Error)?
 
+    /// Set to make the next `save()` fail the way a refused Keychain write
+    /// does. Consumed, so a test can fail one write and let the next succeed.
+    var failNextSave = false
+
     init(stored: BudjSession? = nil) {
         self.stored = stored
     }
@@ -28,6 +32,10 @@ final class InMemorySessionPersistence: SessionPersistence {
     }
 
     func save(_ session: BudjSession, requiringBiometry: Bool) throws {
+        if failNextSave {
+            failNextSave = false
+            throw KeychainError.unhandled(status: errSecIO)
+        }
         stored = session
         storedRequiringBiometry = requiringBiometry
     }
