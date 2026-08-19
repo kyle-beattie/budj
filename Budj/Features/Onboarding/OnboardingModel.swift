@@ -46,6 +46,11 @@ final class OnboardingModel {
     /// a client-only step is recorded without asking again.
     private var serverStep: OnboardingStatus.Step?
 
+    /// Who the router is routing. Held so "asked once" can mean once *per
+    /// user* for biometry — a second account on the same device has a session
+    /// of its own that nobody has been asked about (see `ClientOnlyStep.Scope`).
+    private var userID: String?
+
     /// Whether the welcome screen has been left. Deliberately not persisted:
     /// signing out returns you to the front door, and so does relaunching while
     /// signed out. It is the entry point, not a step that is completed once.
@@ -67,8 +72,13 @@ final class OnboardingModel {
 
     /// Applies what the launch gate already resolved, so the flow does not ask
     /// the server a question it has just been answered.
-    func seed(serverStep: OnboardingStatus.Step?, entitlementLapsed: Bool = false) {
+    func seed(
+        serverStep: OnboardingStatus.Step?,
+        userID: String? = nil,
+        entitlementLapsed: Bool = false
+    ) {
         self.serverStep = serverStep
+        self.userID = userID
         if serverStep == nil { leftWelcome = false }
         if entitlementLapsed { self.entitlementLapsed = true }
         resolve()
@@ -126,7 +136,7 @@ final class OnboardingModel {
     /// The difference is in what the screen did before calling this — turning
     /// biometry on, registering for notifications — not in whether to ask again.
     func offered(_ clientStep: ClientOnlyStep) {
-        record.recordOffered(clientStep)
+        record.recordOffered(clientStep, userID: userID)
         resolve()
     }
 
@@ -161,7 +171,7 @@ final class OnboardingModel {
     }
 
     private func shouldOffer(_ clientStep: ClientOnlyStep) -> Bool {
-        if record.hasOffered(clientStep) { return false }
+        if record.hasOffered(clientStep, userID: userID) { return false }
         // Nothing is gained by offering an unlock this device cannot perform,
         // and the record is left alone so a device that gains an enrolment can
         // still be asked.

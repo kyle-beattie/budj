@@ -65,7 +65,7 @@ struct SessionStoreTests {
     /// the session is still written and a relaunch still resumes.
     @Test func decliningBiometricsStillPersistsTheSession() {
         let persistence = InMemorySessionPersistence()
-        let store = SessionStore(persistence: persistence, requiresBiometry: false)
+        let store = SessionStore(persistence: persistence, preference: InMemoryBiometricPreference())
 
         store.replace(with: .stub())
 

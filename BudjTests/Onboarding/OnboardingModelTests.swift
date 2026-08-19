@@ -175,7 +175,7 @@ struct OnboardingModelTests {
 
         model.offered(.push)
 
-        #expect(record.hasOffered(.push))
+        #expect(record.hasOffered(.push, userID: nil))
         #expect(model.step == .ready)
     }
 
@@ -187,7 +187,7 @@ struct OnboardingModelTests {
 
         #expect(model.step == .billing)
         // Not recorded: a device that gains an enrolment can still be asked.
-        #expect(record.hasOffered(.biometrics) == false)
+        #expect(record.hasOffered(.biometrics, userID: nil) == false)
     }
 
     // MARK: - Refreshing
