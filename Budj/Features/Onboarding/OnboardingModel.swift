@@ -178,4 +178,27 @@ final class OnboardingModel {
         if clientStep == .biometrics, !biometricsAvailable { return false }
         return true
     }
+
+    #if DEBUG
+    /// Moves the router on as though the server had answered with `step`,
+    /// without asking it.
+    ///
+    /// This is the debug-only way past billing and bank while their real
+    /// implementations do not exist: the server derives both from a real
+    /// subscription row and a real Akahu token, so no amount of local StoreKit
+    /// testing produces a `ready` from it. `DebugStepSkip` is the only caller.
+    ///
+    /// It is **not** `advance()`. It takes the step to pretend the server named
+    /// rather than moving to "the next one", so it cannot become the local
+    /// cursor the router exists to avoid, and it is not persisted — relaunching
+    /// asks the server again and lands wherever the server actually says.
+    func simulateServerStep(_ step: OnboardingStatus.Step) {
+        serverStep = step
+        // A skipped paywall is a paywall that was satisfied, as far as anything
+        // downstream can tell. Leaving the explanation up would put "your
+        // subscription is no longer active" on a step nobody is on any more.
+        if step != .billing { entitlementLapsed = false }
+        resolve()
+    }
+    #endif
 }

@@ -21,6 +21,7 @@ struct OnboardingFlowView: View {
     let model: OnboardingModel
 
     @State private var signIn: EmailSignInModel?
+    @State private var paywall = PaywallModel()
 
     var body: some View {
         ZStack {
@@ -79,8 +80,13 @@ struct OnboardingFlowView: View {
             }
 
         case .billing:
-            // Task 11.x.
-            OnboardingStepPlaceholder(step: .billing, entitlementLapsed: model.entitlementLapsed)
+            PaywallView(model: paywall, entitlementLapsed: model.entitlementLapsed) {
+                #if DEBUG
+                // Until 11.2 submits a transaction, nothing can make the server
+                // say `bank`, so the skip says it locally.
+                model.simulateServerStep(.bank)
+                #endif
+            }
 
         case .biometrics:
             if let kind = BiometricGate().enrolledBiometry {
@@ -92,12 +98,19 @@ struct OnboardingFlowView: View {
             }
 
         case .bank:
-            // Task 12.x.
-            OnboardingStepPlaceholder(step: .bank)
+            ConnectBankView {
+                #if DEBUG
+                // 12.2's real version re-fetches status and renders the
+                // server's answer; this asserts the answer instead.
+                model.simulateServerStep(.ready)
+                #endif
+            }
 
         case .push:
-            // Task 13.x.
-            OnboardingStepPlaceholder(step: .push)
+            // Not mocked: push is client-only, so there is no server answer to
+            // stand in for. Only the APNs registration behind it (13.2) is
+            // missing.
+            PushOptInView { model.offered(.push) }
 
         case .ready:
             // Held for the instant between the step changing and the app
