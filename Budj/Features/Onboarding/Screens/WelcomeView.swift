@@ -7,6 +7,12 @@ import SwiftUI
 
 /// The front door: what Budj does, and two ways in.
 ///
+/// The copy addresses somebody self-employed, because that is who this is for.
+/// Salary is the one case Budj is *not* for: a fixed amount on a fixed date is
+/// already solved by an automatic payment at the bank, for free. The problem
+/// only exists when the amount and the timing are unknown in advance, which is
+/// exactly what a scheduled transfer cannot express and a rule can.
+///
 /// It exists because there is no free tier and the paywall arrives early. Being
 /// asked to create an account, and then to pay, without having been told what
 /// the thing does is a bad first thirty seconds. One screen buys the rest of
@@ -21,14 +27,14 @@ struct WelcomeView: View {
 
     var body: some View {
         StepScaffold(
-            title: "Money that moves itself",
-            subtitle: "Set a condition and an action, and Budj does it the moment the condition is true."
+            title: "Split it before you spend it",
+            subtitle: "Budj watches for money landing and sets aside what isn't yours — tax, GST, whatever you decide — the moment it arrives."
         ) {
             VStack(alignment: .leading, spacing: BudjSpacing.regular) {
                 point(
                     symbol: "arrow.trianglehead.branch",
-                    title: "Rules, not reminders",
-                    detail: "When your salary lands, move $200 to savings. No date to pick and nothing to remember."
+                    title: "Built for irregular income",
+                    detail: "Different payers, different amounts, different days. Set your percentages once and Budj applies them to whatever lands."
                 )
                 point(
                     symbol: "building.columns",
@@ -37,8 +43,8 @@ struct WelcomeView: View {
                 )
                 point(
                     symbol: "bolt",
-                    title: "Fires when it's true",
-                    detail: "Not on the first of the month, but the moment your balance or your income says so."
+                    title: "No mental arithmetic",
+                    detail: "No flicking between your banking app and a spreadsheet to work out what is actually yours to spend."
                 )
             }
             .padding(.vertical, BudjSpacing.tight)

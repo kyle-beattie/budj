@@ -28,9 +28,9 @@ struct PlaceholderView: View {
 
     private var subtitle: String {
         if let email = session.current?.user.email {
-            "As \(email). The rest of onboarding — the paywall, your bank, notifications — is still being built."
+            "As \(email). Onboarding is done. Rules, and the rest of the app, are still being built."
         } else {
-            "The rest of onboarding — the paywall, your bank, notifications — is still being built."
+            "Onboarding is done. Rules, and the rest of the app, are still being built."
         }
     }
 

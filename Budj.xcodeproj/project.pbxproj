@@ -33,6 +33,7 @@
 		A5ABFFD130312286002F7B0A /* Exceptions for "Budj" folder in "Budj" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Budj.storekit,
 				Info.plist,
 			);
 			target = A58BEBE63022E80400CD2C05 /* Budj */;
