@@ -48,7 +48,7 @@ struct UnreachableView: View {
     }
 }
 
-#Preview {
-    UnreachableView()
-        .environment(AppModel.preview())
-}
+//#Preview {
+//    UnreachableView()
+//        .environment(AppModel.preview())
+//}

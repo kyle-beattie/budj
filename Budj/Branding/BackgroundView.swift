@@ -12,13 +12,18 @@ struct BackgroundView: View {
 
     var body: some View {
         // Animated background using ZStack and LinearGradient
+
         LinearGradient(
             colors: [
-              BudjColor.background,
-              BudjColor.borderSubtle],
+              .black,
+              .white
+            ],
             startPoint: startAnimation ? .topLeading : .bottomLeading,
             endPoint: startAnimation ? .bottomTrailing : .topTrailing
         )
+        .blendMode(.overlay)
+        .opacity(0.3)
+
         // Animation to toggle the gradient colors
         .onAppear {
             withAnimation(.linear(duration: 5.0).repeatForever()) {
@@ -26,6 +31,7 @@ struct BackgroundView: View {
             }
         }
         .ignoresSafeArea()
+        .background(BudjColor.background)
     }
 }
 

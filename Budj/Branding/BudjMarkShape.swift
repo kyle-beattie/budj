@@ -169,43 +169,6 @@ struct AnimatingBudjMarkShape: View {
       .aspectRatio(BudjMarkShape.aspectRatio, contentMode: .fit)
       .accessibilityHidden(true)
       .frame(height: 160)
-
-
-
-
-//      ZStack {
-//          BudjMarkShape(layer: .stem)
-//              .fill(Color.markStem)
-//          BudjMarkShape(layer: .backCoin)
-//              .fill(backCoinColor)
-//              .frame(height: 148)
-//              .offset(x: pulse, y: 0)
-//              .opacity(opacity)
-//              .onAppear{
-//                withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
-//                    pulse = 10
-//                    opacity = 0.8;
-//                  backCoinColor = Color.mint
-//                  }
-//              }
-//          BudjMarkShape(layer: .frontCoin)
-//              .fill(frontCoinColor)
-//              .frame(height: 148)
-//              .offset(x: -pulse, y: 0)
-//              .opacity(opacity)
-//              .onAppear{
-//                withAnimation(.easeInOut(duration: 0.3).repeatForever(autoreverses: true)) {
-//                    pulse = -10
-//                    opacity = 0.8;
-//                    frontCoinColor = Color.markBackCoin.opacity(0.8)
-//                  }
-//              }
-//      }
-//      .aspectRatio(BudjMarkShape.aspectRatio, contentMode: .fit)
-//      .accessibilityHidden(true)
-//
-
-
     }
 }
 

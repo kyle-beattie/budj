@@ -123,17 +123,17 @@ struct ConfirmEmailSheet: View {
     }
 }
 
-#Preview("Waiting") {
-    ConfirmEmailSheet(model: .preview(.waiting(email: "someone@example.com")), onClose: {})
-}
-
-#Preview("Confirmed") {
-    ConfirmEmailSheet(model: .preview(.confirmed), onClose: {})
-}
-
-#Preview("Refused") {
-    ConfirmEmailSheet(
-        model: .preview(.refused("That link has expired. Create your account again to get a new one.")),
-        onClose: {}
-    )
-}
+//#Preview("Waiting") {
+//    ConfirmEmailSheet(model: .preview(.waiting(email: "someone@example.com")), onClose: {})
+//}
+//
+//#Preview("Confirmed") {
+//    ConfirmEmailSheet(model: .preview(.confirmed), onClose: {})
+//}
+//
+//#Preview("Refused") {
+//    ConfirmEmailSheet(
+//        model: .preview(.refused("That link has expired. Create your account again to get a new one.")),
+//        onClose: {}
+//    )
+//}

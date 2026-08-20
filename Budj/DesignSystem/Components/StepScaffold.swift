@@ -20,7 +20,7 @@ struct StepScaffold<Content: View, Actions: View>: View {
 
 
     @State private var currentOffset: CGFloat = 0
-    let maxHeight: CGFloat = 148
+    let maxHeight: CGFloat = 80
     let minHeight: CGFloat = 40
 
     var body: some View {
@@ -33,40 +33,27 @@ struct StepScaffold<Content: View, Actions: View>: View {
         // keyboard up was nothing, so the form was laid out and then clipped to
         // zero height. As an inset the scroll view always has the full
         // container, and its content is simply pushed clear of the buttons.
-        ScrollView {
-            VStack(alignment: .leading, spacing: BudjSpacing.loose) {
-              BudjLogo(height: currentHeight)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, BudjSpacing.section)
-                .accessibilityHidden(true)
+        HeaderView()
+        VStack(alignment: .leading, spacing: BudjSpacing.loose) {
+          VStack(alignment: .leading, spacing: BudjSpacing.tight) {
+            Text(title)
+              .font(BudjTypography.display)
+              .foregroundStyle(BudjColor.textPrimary)
 
-              VStack(alignment: .leading, spacing: BudjSpacing.tight) {
-                Text(title)
-                  .font(BudjTypography.display)
-                  .foregroundStyle(BudjColor.textPrimary)
-
-                if let subtitle {
-                  Text(subtitle)
-                    .font(BudjTypography.body)
-                    .foregroundStyle(BudjColor.textSecondary)
-                }
-              }
-              .accessibilityAddTraits(.isHeader)
-
-              content()
+            if let subtitle {
+              Text(subtitle)
+                .font(BudjTypography.body)
+                .foregroundStyle(BudjColor.textSecondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, BudjSpacing.loose)
-            .padding(.top, BudjSpacing.screen)
-            .padding(.bottom, BudjSpacing.section)
           }
-        .scrollBounceBehavior(.basedOnSize)
-        // Track the scroll position relative to the container content
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.contentOffset.y
-        } action: { oldValue, newValue in
-            currentOffset = newValue
+          .accessibilityAddTraits(.isHeader)
+
+          content()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, BudjSpacing.loose)
+        .padding(.top, BudjSpacing.screen)
+        .padding(.bottom, BudjSpacing.section)
         .safeAreaInset(edge: .bottom) {
           VStack(spacing: BudjSpacing.snug) {
             actions()
